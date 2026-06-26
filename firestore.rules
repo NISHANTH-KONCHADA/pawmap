@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Cats collection: public read, authenticated write
+    match /cats/{catId} {
+      allow read: if true;
+      allow create, update: if request.auth != null;
+      allow delete: if false; // no hard deletes — status changes only
+    }
+  }
+}

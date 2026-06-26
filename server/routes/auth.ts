@@ -3,7 +3,11 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || "pawmap_super_secret_key_2026_hackthekitty";
+
+if (!process.env.JWT_SECRET) {
+  throw new Error("FATAL: JWT_SECRET environment variable is not set. Server cannot start securely.");
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Helper for Nodemailer
 function getTransporter() {

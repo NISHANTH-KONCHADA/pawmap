@@ -142,7 +142,7 @@ export default function ReportWizard({ onClose, userLocation, onSightingCreated 
         condition: formData.condition,
         status: formData.needs === "tnr" ? "tnr" : formData.needs === "colony" ? "colony" : "sighting",
         nickname: formData.nickname || `Stray #${Math.floor(Math.random() * 9000 + 1000)}`,
-        photoUrl: formData.photoBase64 ? "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=600" : "", // mock cloudinary url
+        photoUrl: formData.photoBase64 || "",
         reporterEmail: formData.email
       };
 

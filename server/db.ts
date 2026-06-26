@@ -101,79 +101,8 @@ catSchema.index({ location: '2dsphere' });
 
 export const MongooseCatModel = mongoose.models.Cat || mongoose.model('Cat', catSchema);
 
-// 2. High-fidelity Fallback JSON/In-memory Database Engine
+// 2. JSON/In-memory Fallback Database Engine
 const DB_FILE_PATH = path.join(process.cwd(), "db.json");
-
-// Default coordinates for seeding (London center)
-const DEFAULT_LAT = 51.505;
-const DEFAULT_LNG = -0.09;
-
-const SEED_CATS: Partial<ICat>[] = [
-  {
-    nickname: 'Ginger',
-    status: 'sighting',
-    condition: 'healthy',
-    count: 1,
-    location: { type: 'Point', coordinates: [DEFAULT_LNG + 0.001, DEFAULT_LAT + 0.001] },
-    history: [{ action: 'Sighted near the red telephone booth', by: 'Community Alert', at: new Date() }],
-    notes: [{ text: 'Very friendly ginger tabby, loves tuna treats!', by: 'Clara', at: new Date() }],
-    volunteers: []
-  },
-  {
-    nickname: 'Library Colony',
-    status: 'colony',
-    condition: 'unknown',
-    count: 5,
-    location: { type: 'Point', coordinates: [DEFAULT_LNG - 0.002, DEFAULT_LAT + 0.002] },
-    history: [{ action: 'Colony registered with 5 active stray cats', by: 'Librarian Alex', at: new Date() }],
-    notes: [{ text: 'Fed daily at 6:00 PM near back alley.', by: 'Alex', at: new Date() }],
-    volunteers: [{ email: 'alex@library.org', role: 'feeder', joinedAt: new Date() }]
-  },
-  {
-    nickname: 'Smokey',
-    status: 'tnr',
-    condition: 'healthy',
-    count: 1,
-    location: { type: 'Point', coordinates: [DEFAULT_LNG + 0.003, DEFAULT_LAT - 0.001] },
-    history: [{ action: 'Scheduled for Trap-Neuter-Return', by: 'TNR Coordinator', at: new Date() }],
-    notes: [{ text: 'Trap has been placed near the bike rack.', by: 'Dave', at: new Date() }],
-    volunteers: [{ email: 'dave@tnrtrappers.com', role: 'tnr', joinedAt: new Date() }]
-  },
-  {
-    nickname: 'Mochi',
-    status: 'adopted',
-    condition: 'healthy',
-    count: 1,
-    location: { type: 'Point', coordinates: [DEFAULT_LNG - 0.001, DEFAULT_LAT - 0.003] },
-    history: [
-      { action: 'Sighted in the park', by: 'Sighting App', at: new Date(Date.now() - 30 * 24 * 3600 * 1000) },
-      { action: 'Neutered and ear-tipped', by: 'Clinic Care', at: new Date(Date.now() - 15 * 24 * 3600 * 1000) },
-      { action: 'Formally adopted into a loving home! 🐾', by: 'New Parent Sarah', at: new Date() }
-    ],
-    notes: [{ text: 'Settling in amazingly. Sleeping on the couch!', by: 'Sarah', at: new Date() }],
-    volunteers: []
-  },
-  {
-    nickname: 'Shadow',
-    status: 'sighting',
-    condition: 'injured',
-    count: 1,
-    location: { type: 'Point', coordinates: [DEFAULT_LNG + 0.002, DEFAULT_LAT + 0.003] },
-    history: [{ action: 'Sighted with limp on left hind leg', by: 'Marcus', at: new Date() }],
-    notes: [{ text: 'Need a drop-trap for this one, quite skittish.', by: 'Marcus', at: new Date() }],
-    volunteers: []
-  },
-  {
-    nickname: 'Market Colony',
-    status: 'colony',
-    condition: 'unknown',
-    count: 8,
-    location: { type: 'Point', coordinates: [DEFAULT_LNG - 0.003, DEFAULT_LAT - 0.002] },
-    history: [{ action: 'Registered colony behind fruit stalls', by: 'Market Admin', at: new Date() }],
-    notes: [{ text: 'Stall owners cooperate. No kittens seen recently.', by: 'Janice', at: new Date() }],
-    volunteers: []
-  }
-];
 
 class JSONDatabase {
   private cats: ICat[] = [];
@@ -201,7 +130,7 @@ class JSONDatabase {
         });
         console.log(`[JSON DB] Loaded ${this.cats.length} cats from ${DB_FILE_PATH}`);
       } else {
-        console.log(`[JSON DB] No db file found. Seeding initial data...`);
+        console.log("[JSON DB] No db file found. Starting with empty database.");
         this.seed();
       }
       this.isLoaded = true;
@@ -212,23 +141,9 @@ class JSONDatabase {
   }
 
   private seed() {
-    this.cats = SEED_CATS.map((c, i) => ({
-      _id: `cat_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}`,
-      location: {
-        type: c.location?.type || 'Point',
-        coordinates: c.location?.coordinates || [DEFAULT_LNG, DEFAULT_LAT]
-      },
-      status: c.status || 'sighting',
-      count: c.count || 1,
-      nickname: c.nickname || 'Unknown Stray',
-      condition: c.condition || 'unknown',
-      photoUrl: c.photoUrl || '',
-      history: c.history || [],
-      notes: c.notes || [],
-      volunteers: c.volunteers || [],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }));
+    // Start with a clean empty database — no fake/hardcoded data.
+    // Real cat sightings come from user reports.
+    this.cats = [];
     this.save();
   }
 
