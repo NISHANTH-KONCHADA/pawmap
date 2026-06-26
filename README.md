@@ -2,9 +2,7 @@
 
 <br/>
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=40&duration=2500&pause=1200&color=22C55E&center=true&vCenter=true&width=500&height=80&lines=🐾+PawMap" alt="PawMap" />
-
-<img src="https://readme-typing-svg.demolab.com?font=Inter&weight=400&size=18&duration=3000&pause=2000&color=94A3B8&center=true&vCenter=true&multiline=true&width=620&height=50&lines=Real-time+stray+cat+care+%26+TNR+coordination" alt="tagline" />
+![PawMap](./assets/banner.svg)
 
 <br/>
 
@@ -20,8 +18,8 @@
 [![GCP](https://img.shields.io/badge/GCP-Cloud_Run-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)](https://cloud.google.com/run)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-
 </div>
+
 
 ---
 
