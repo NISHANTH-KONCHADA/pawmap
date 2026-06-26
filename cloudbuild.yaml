@@ -4,32 +4,28 @@
 # Project:   autosre-hackathon-2026
 # Region:    asia-south1
 #
-# Services used (all GCP-native):
-#   - Artifact Registry  → Docker image storage
-#   - Cloud Run          → Express + Socket.io backend
-#   - Firebase Hosting   → React/Vite frontend (CDN)
-#   - Firestore          → Primary database (replaces MongoDB Atlas)
-#   - Secret Manager     → All credentials at runtime
-#
-# Trigger: push to `main` branch
+# Fix: $PROJECT_ID cannot be used inside substitution variable values.
+#      Image path is inlined directly in each step using $PROJECT_ID.
 # ──────────────────────────────────────────────────────────────────────────────
 
 substitutions:
   _REGION: asia-south1
   _SERVICE: pawmap
   _REPO: pawmap
-  _IMAGE: ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}
   _FIREBASE_PROJECT: autosre-hackathon-2026
 
 steps:
-  # ── Step 1: Build Docker image (backend + static assets) ──────────────────
+  # ── Step 1: Build Docker image ─────────────────────────────────────────────
   - name: gcr.io/cloud-builders/docker
     id: build-image
     args:
       - build
-      - --tag=${_IMAGE}:$COMMIT_SHA
-      - --tag=${_IMAGE}:latest
-      - --cache-from=${_IMAGE}:latest
+      - --tag
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE:$COMMIT_SHA
+      - --tag
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE:latest
+      - --cache-from
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE:latest
       - .
 
   # ── Step 2: Push image to Artifact Registry ────────────────────────────────
@@ -38,7 +34,7 @@ steps:
     args:
       - push
       - --all-tags
-      - ${_IMAGE}
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE
     waitFor:
       - build-image
 
@@ -50,7 +46,7 @@ steps:
       - run
       - deploy
       - $_SERVICE
-      - --image=${_IMAGE}:$COMMIT_SHA
+      - --image=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE:$COMMIT_SHA
       - --region=$_REGION
       - --platform=managed
       - --allow-unauthenticated
@@ -72,7 +68,7 @@ steps:
       - -c
       - npm ci && npm run build:client
     waitFor:
-      - "-"   # run immediately in parallel with docker steps
+      - "-"
 
   # ── Step 5: Deploy frontend to Firebase Hosting ───────────────────────────
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -85,11 +81,11 @@ steps:
         firebase deploy --only hosting --project=$_FIREBASE_PROJECT --non-interactive
     waitFor:
       - build-frontend
-      - deploy-backend   # ensure Cloud Run URL exists before hosting deploy
+      - deploy-backend
 
 images:
-  - ${_IMAGE}:$COMMIT_SHA
-  - ${_IMAGE}:latest
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE:$COMMIT_SHA
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/$_SERVICE:latest
 
 options:
   logging: CLOUD_LOGGING_ONLY
