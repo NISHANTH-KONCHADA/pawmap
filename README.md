@@ -8,6 +8,8 @@
 
 **Stray cats already run the internet. PawMap gives them the infrastructure to run the streets too.**
 
+**[🔥 Live at pawmap.web.app](https://pawmap.web.app)**
+
 <br/>
 
 [![Node](https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
@@ -16,6 +18,7 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
 [![Socket.io](https://img.shields.io/badge/Socket.io-4-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io)
 [![GCP](https://img.shields.io/badge/GCP-Cloud_Run-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)](https://cloud.google.com/run)
+[![Firebase](https://img.shields.io/badge/Firebase-Hosting-FFCA28?style=for-the-badge&logo=firebase&logoColor=white)](https://firebase.google.com)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
 </div>
@@ -88,7 +91,7 @@ PawMap gives caregiver communities a **synchronized, live map** to coordinate st
 - **Groq Vision AI** — primary model for automated photo feature extraction; falls back to Gemini 3.5 Flash
 - **Simulated Temporal Engine** — state-durable TNR workflow: notifies volunteers → 24h reminder → outcome prompt
 - **JSON File Fallback DB** — server works fully offline without MongoDB, seeding demo data automatically
-- **GCP Cloud Run** — containerized, auto-scaling, zero cold-start cost at idle
+- **GCP Native** — fully automated deployment pipeline; backend on Cloud Run, frontend on Firebase Hosting
 
 ---
 
@@ -114,7 +117,7 @@ npm install
 npm run dev
 ```
 
-> 💡 **Zero-config mode**: If you skip the MongoDB URI, the server automatically falls back to a local `db.json` file pre-seeded with 6 demo cats. Everything works out of the box.
+> 💡 **Zero-config mode**: If you skip the MongoDB URI, the server automatically falls back to a local `db.json` file pre-seeded with demo cats. Everything works out of the box.
 
 Open [http://localhost:3000](http://localhost:3000).
 
@@ -159,9 +162,9 @@ npm run lint           # TypeScript type-check (no emit)
 
 ---
 
-## ☁️ GCP Cloud Run Deployment
+## ☁️ GCP Cloud Deployment
 
-The project ships with a multi-stage **Dockerfile** and a **Cloud Build CI/CD pipeline** (`cloudbuild.yaml`).
+The project is configured for a fully-automated, serverless deployment using **Cloud Build**, **Cloud Run** (backend), and **Firebase Hosting** (frontend).
 
 ### One-time Setup
 
@@ -171,24 +174,26 @@ gcloud services enable \
   cloudbuild.googleapis.com \
   run.googleapis.com \
   artifactregistry.googleapis.com \
-  secretmanager.googleapis.com
+  secretmanager.googleapis.com \
+  firebasehosting.googleapis.com
 
-# 2. Create Artifact Registry repository
+# 2. Add Firebase to your GCP Project
+npx firebase-tools projects:addfirebase YOUR_PROJECT_ID
+npx firebase-tools hosting:sites:create pawmap --project YOUR_PROJECT_ID
+
+# 3. Create Artifact Registry repository
 gcloud artifacts repositories create pawmap \
   --repository-format=docker \
   --location=asia-south1
 
-# 3. Store secrets in Secret Manager (never bake secrets into images)
+# 4. Store secrets in Secret Manager (never bake secrets into images)
 gcloud secrets create MONGODB_URI    --data-file=- <<< "your_mongodb_uri"
 gcloud secrets create JWT_SECRET     --data-file=- <<< "your_jwt_secret"
 gcloud secrets create GROQ_API_KEY   --data-file=- <<< "your_groq_key"
-gcloud secrets create CLOUDINARY_URL --data-file=- <<< "your_cloudinary_url"
 # ... repeat for remaining secrets
 
-# 4. Grant Cloud Build access to secrets
-gcloud projects add-iam-policy-binding PROJECT_ID \
-  --member="serviceAccount:PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
-  --role="roles/secretmanager.secretAccessor"
+# 5. Grant Cloud Build SA access to secrets & Firebase
+# (Make sure to grant roles/secretmanager.secretAccessor to both Cloud Build and the Compute Engine default SA)
 ```
 
 ### Deploy
@@ -196,14 +201,14 @@ gcloud projects add-iam-policy-binding PROJECT_ID \
 ```bash
 # Manual trigger
 gcloud builds submit --config=cloudbuild.yaml
-
-# Or connect your GitHub repo to a Cloud Build trigger for auto-deploy on push to main
 ```
 
-The pipeline:
-1. 🔨 Builds the multi-stage Docker image (builder → lean Alpine production image)
-2. 📤 Pushes to Artifact Registry with `$COMMIT_SHA` + `latest` tags
-3. 🚀 Deploys to Cloud Run — secrets injected from Secret Manager at runtime, `NODE_ENV=production` set automatically
+The `cloudbuild.yaml` pipeline automatically:
+1. 🔨 Builds the multi-stage backend Docker image
+2. 📤 Pushes to Artifact Registry
+3. 🚀 Deploys the Express API to **Cloud Run** (secrets injected securely)
+4. 🏗️ Builds the Vite frontend (`npm run build:client`)
+5. 🌐 Deploys the static assets to **Firebase Hosting** (which proxies `/api` and `/socket.io` to Cloud Run via `firebase.json` rewrites)
 
 ---
 
