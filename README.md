@@ -2,26 +2,24 @@
 
 <br/>
 
-```
-██████╗  █████╗ ██╗    ██╗███╗   ███╗ █████╗ ██████╗
-██╔══██╗██╔══██╗██║    ██║████╗ ████║██╔══██╗██╔══██╗
-██████╔╝███████║██║ █╗ ██║██╔████╔██║███████║██████╔╝
-██╔═══╝ ██╔══██║██║███╗██║██║╚██╔╝██║██╔══██║██╔═══╝
-██║     ██║  ██║╚███╔███╔╝██║ ╚═╝ ██║██║  ██║██║
-╚═╝     ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  🐾
-```
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=40&duration=2500&pause=1200&color=22C55E&center=true&vCenter=true&width=500&height=80&lines=🐾+PawMap" alt="PawMap" />
 
-**Real-time community infrastructure for stray cat care & TNR coordination**
+<img src="https://readme-typing-svg.demolab.com?font=Inter&weight=400&size=18&duration=3000&pause=2000&color=94A3B8&center=true&vCenter=true&multiline=true&width=620&height=50&lines=Real-time+stray+cat+care+%26+TNR+coordination" alt="tagline" />
 
-*Stray cats already run the internet. PawMap gives them the infrastructure to run the streets too.*
+<br/>
 
-[![Node](https://img.shields.io/badge/Node.js-≥18-339933?logo=node.js&logoColor=white)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
-[![Socket.io](https://img.shields.io/badge/Socket.io-4-010101?logo=socket.io&logoColor=white)](https://socket.io)
-[![GCP](https://img.shields.io/badge/Deployed_on-GCP_Cloud_Run-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/run)
-[![License](https://img.shields.io/badge/License-MIT-22c55e)](LICENSE)
+**Stray cats already run the internet. PawMap gives them the infrastructure to run the streets too.**
+
+<br/>
+
+[![Node](https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+[![Socket.io](https://img.shields.io/badge/Socket.io-4-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io)
+[![GCP](https://img.shields.io/badge/GCP-Cloud_Run-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)](https://cloud.google.com/run)
+[![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
+
 
 </div>
 
