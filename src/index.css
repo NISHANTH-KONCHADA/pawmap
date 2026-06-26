@@ -1,0 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-forest: #0D5C4A;
+  --color-forest-dark: #062C23;
+  --color-moss: #1D9E75;
+  --color-dusk: #FAF6F0;
+  --color-ink: #1A1A18;
+  --color-mist: #6B6B68;
+  --color-parchment: #F0EBE1;
+  --color-clay: #D85A30;
+  --color-lavender: #7F77DD;
+  --color-sage: #639922;
+  --color-sky: #378ADD;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+}
+
+/* Custom transitions and scrollbar styles */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-dusk);
+  color: var(--color-ink);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* Scrollbar customizations */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-dusk);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-parchment);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-mist);
+}
+
+/* Leaflet map styles to ensure beautiful, modern styling */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background-color: var(--color-parchment) !important;
+}
+
+.leaflet-bar {
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+}
+
+.leaflet-bar a {
+  background-color: white !important;
+  color: var(--color-ink) !important;
+  border-bottom: 1px solid var(--color-parchment) !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: var(--color-dusk) !important;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+
+/* Custom horizontal bounce animation for mobile filter scroll indicator */
+@keyframes bounce-horizontal {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+.animate-bounce-horizontal {
+  animation: bounce-horizontal 1s ease-in-out infinite;
+}
+
+/* Position leaflet controls higher on mobile to avoid bottom navigation / bottom filters overlap */
+@media (max-width: 767px) {
+  .leaflet-bottom.leaflet-right {
+    bottom: 84px !important;
+  }
+}
+
+/* Cat whisker twitch animation */
+@keyframes whisker-twitch-left {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  87% { transform: rotate(-8deg); }
+  89% { transform: rotate(4deg); }
+  91% { transform: rotate(-6deg); }
+  93% { transform: rotate(2deg); }
+  95% { transform: rotate(0deg); }
+}
+
+@keyframes whisker-twitch-right {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  87% { transform: rotate(8deg); }
+  89% { transform: rotate(-4deg); }
+  91% { transform: rotate(6deg); }
+  93% { transform: rotate(-2deg); }
+  95% { transform: rotate(0deg); }
+}
+
+.animate-whisker-left {
+  animation: whisker-twitch-left 5s ease-in-out infinite;
+  transform-origin: 12px 6px;
+}
+
+.animate-whisker-right {
+  animation: whisker-twitch-right 5s ease-in-out infinite;
+  transform-origin: 12px 6px;
+}
+
+/* Apple-inspired translucent glass header */
+.glass-header {
+  background-color: rgba(6, 44, 35, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Apple-inspired translucent glass mobile bottom nav */
+.glass-nav {
+  background-color: rgba(250, 246, 240, 0.85); /* matching --color-dusk with opacity */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(13, 92, 74, 0.08);
+  box-shadow: 0 -8px 32px rgba(13, 92, 74, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+

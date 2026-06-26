@@ -1,0 +1,6 @@
+{
+  "name": "PawMap",
+  "description": "Real-time community map for stray cat care and TNR coordination.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

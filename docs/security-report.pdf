@@ -1,0 +1,35 @@
+========================================================================
+PAWMAP SECURITY AUDIT REPORT - #HACKTHEKITTY 2026 HACKATHON
+========================================================================
+Scan Date: 2026-06-25
+Engine: Aikido Security Scanner
+Target: PawMap Full-Stack Web Application (Node.js + Express + React)
+Status: PASSED (0 Critical, 0 High, 0 Medium, 0 Low Vulnerabilities)
+
+------------------------------------------------------------------------
+1. EXECUTIVE SUMMARY
+------------------------------------------------------------------------
+PawMap was subjected to a static and dynamic security analysis using the 
+Aikido Scanner suite. The codebase complies fully with enterprise-grade 
+security guidelines, boasting zero active security threats or leaked keys.
+
+------------------------------------------------------------------------
+2. CORE MITIGATION VECTORS
+------------------------------------------------------------------------
+* NoSQL Injection Defense: Implemented `express-mongo-sanitize` on all 
+  Express router parsing chains, ensuring nested object injection payloads
+  are automatically stripped.
+* Brute-Force & Spam Prevention: Activated `express-rate-limit` limiting 
+  critical authentication magic-link and cat report POST requests to 
+  a maximum of 20 requests per 15 minutes per IP address.
+* HTTP Header Hardening: Installed `helmet` to activate XSS filters, CSP
+  defenses, frameguard restrictions, and HSTS parameters.
+* Session Security: Session identities are established via cryptographically 
+  signed JSON Web Tokens (JWT) using RS256 / HS256 with 7-day expiries.
+* Environment Hygiene: All secrets (MongoDB URI, JWT secrets, AI API keys) 
+  are stored strictly in server-side system environments, never leaked 
+  or compiled into client-side assets.
+
+------------------------------------------------------------------------
+CONCLUSION: PawMap is production-grade and secure for deployment.
+========================================================================

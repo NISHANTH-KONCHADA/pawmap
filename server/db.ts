@@ -1,0 +1,409 @@
+import mongoose from "mongoose";
+import fs from "fs";
+import path from "path";
+
+// Haversine formula to compute distance in meters
+export function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371e3; // meters
+  const phi1 = lat1 * Math.PI / 180;
+  const phi2 = lat2 * Math.PI / 180;
+  const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+  const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+            Math.cos(phi1) * Math.cos(phi2) *
+            Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // in meters
+}
+
+// Interfaces
+export interface ICat {
+  _id: string;
+  location: {
+    type: string;
+    coordinates: [number, number]; // [lng, lat]
+  };
+  status: "sighting" | "colony" | "tnr" | "adopted";
+  count: number;
+  nickname: string;
+  condition: "healthy" | "injured" | "kitten" | "unknown";
+  photoUrl: string;
+  history: Array<{
+    action: string;
+    by: string;
+    at: Date;
+  }>;
+  notes: Array<{
+    text: string;
+    by: string;
+    at: Date;
+  }>;
+  volunteers: Array<{
+    email: string;
+    role: "feeder" | "tnr" | "foster";
+    joinedAt: Date;
+  }>;
+  tnrEvent?: {
+    scheduledDate: Date;
+    status: "scheduled" | "completed" | "rescheduled" | "cancelled";
+    temporalWorkflowId: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 1. Mongoose Schema Setup
+const catSchema = new mongoose.Schema({
+  location: {
+    type: { type: String, default: 'Point' },
+    coordinates: { type: [Number], required: true } // [lng, lat]
+  },
+  status: {
+    type: String,
+    enum: ['sighting', 'colony', 'tnr', 'adopted'],
+    default: 'sighting'
+  },
+  count: { type: Number, default: 1 },
+  nickname: { type: String, maxlength: 60 },
+  condition: {
+    type: String,
+    enum: ['healthy', 'injured', 'kitten', 'unknown']
+  },
+  photoUrl: String,
+  history: [{
+    action: { type: String, required: true },
+    by: { type: String, required: true },
+    at: { type: Date, default: Date.now }
+  }],
+  notes: [{
+    text: { type: String, maxlength: 500 },
+    by: { type: String, required: true },
+    at: { type: Date, default: Date.now }
+  }],
+  volunteers: [{
+    email: { type: String, required: true },
+    role: { type: String, enum: ['feeder', 'tnr', 'foster'] },
+    joinedAt: { type: Date, default: Date.now }
+  }],
+  tnrEvent: {
+    scheduledDate: Date,
+    status: {
+      type: String,
+      enum: ['scheduled', 'completed', 'rescheduled', 'cancelled']
+    },
+    temporalWorkflowId: String
+  }
+}, { timestamps: true });
+
+catSchema.index({ location: '2dsphere' });
+
+export const MongooseCatModel = mongoose.models.Cat || mongoose.model('Cat', catSchema);
+
+// 2. High-fidelity Fallback JSON/In-memory Database Engine
+const DB_FILE_PATH = path.join(process.cwd(), "db.json");
+
+// Default coordinates for seeding (London center)
+const DEFAULT_LAT = 51.505;
+const DEFAULT_LNG = -0.09;
+
+const SEED_CATS: Partial<ICat>[] = [
+  {
+    nickname: 'Ginger',
+    status: 'sighting',
+    condition: 'healthy',
+    count: 1,
+    location: { type: 'Point', coordinates: [DEFAULT_LNG + 0.001, DEFAULT_LAT + 0.001] },
+    history: [{ action: 'Sighted near the red telephone booth', by: 'Community Alert', at: new Date() }],
+    notes: [{ text: 'Very friendly ginger tabby, loves tuna treats!', by: 'Clara', at: new Date() }],
+    volunteers: []
+  },
+  {
+    nickname: 'Library Colony',
+    status: 'colony',
+    condition: 'unknown',
+    count: 5,
+    location: { type: 'Point', coordinates: [DEFAULT_LNG - 0.002, DEFAULT_LAT + 0.002] },
+    history: [{ action: 'Colony registered with 5 active stray cats', by: 'Librarian Alex', at: new Date() }],
+    notes: [{ text: 'Fed daily at 6:00 PM near back alley.', by: 'Alex', at: new Date() }],
+    volunteers: [{ email: 'alex@library.org', role: 'feeder', joinedAt: new Date() }]
+  },
+  {
+    nickname: 'Smokey',
+    status: 'tnr',
+    condition: 'healthy',
+    count: 1,
+    location: { type: 'Point', coordinates: [DEFAULT_LNG + 0.003, DEFAULT_LAT - 0.001] },
+    history: [{ action: 'Scheduled for Trap-Neuter-Return', by: 'TNR Coordinator', at: new Date() }],
+    notes: [{ text: 'Trap has been placed near the bike rack.', by: 'Dave', at: new Date() }],
+    volunteers: [{ email: 'dave@tnrtrappers.com', role: 'tnr', joinedAt: new Date() }]
+  },
+  {
+    nickname: 'Mochi',
+    status: 'adopted',
+    condition: 'healthy',
+    count: 1,
+    location: { type: 'Point', coordinates: [DEFAULT_LNG - 0.001, DEFAULT_LAT - 0.003] },
+    history: [
+      { action: 'Sighted in the park', by: 'Sighting App', at: new Date(Date.now() - 30 * 24 * 3600 * 1000) },
+      { action: 'Neutered and ear-tipped', by: 'Clinic Care', at: new Date(Date.now() - 15 * 24 * 3600 * 1000) },
+      { action: 'Formally adopted into a loving home! 🐾', by: 'New Parent Sarah', at: new Date() }
+    ],
+    notes: [{ text: 'Settling in amazingly. Sleeping on the couch!', by: 'Sarah', at: new Date() }],
+    volunteers: []
+  },
+  {
+    nickname: 'Shadow',
+    status: 'sighting',
+    condition: 'injured',
+    count: 1,
+    location: { type: 'Point', coordinates: [DEFAULT_LNG + 0.002, DEFAULT_LAT + 0.003] },
+    history: [{ action: 'Sighted with limp on left hind leg', by: 'Marcus', at: new Date() }],
+    notes: [{ text: 'Need a drop-trap for this one, quite skittish.', by: 'Marcus', at: new Date() }],
+    volunteers: []
+  },
+  {
+    nickname: 'Market Colony',
+    status: 'colony',
+    condition: 'unknown',
+    count: 8,
+    location: { type: 'Point', coordinates: [DEFAULT_LNG - 0.003, DEFAULT_LAT - 0.002] },
+    history: [{ action: 'Registered colony behind fruit stalls', by: 'Market Admin', at: new Date() }],
+    notes: [{ text: 'Stall owners cooperate. No kittens seen recently.', by: 'Janice', at: new Date() }],
+    volunteers: []
+  }
+];
+
+class JSONDatabase {
+  private cats: ICat[] = [];
+  private isLoaded = false;
+
+  constructor() {
+    this.load();
+  }
+
+  private load() {
+    try {
+      if (fs.existsSync(DB_FILE_PATH)) {
+        const raw = fs.readFileSync(DB_FILE_PATH, "utf8");
+        this.cats = JSON.parse(raw);
+        // Parse dates
+        this.cats.forEach(cat => {
+          if (cat.createdAt) cat.createdAt = new Date(cat.createdAt);
+          if (cat.updatedAt) cat.updatedAt = new Date(cat.updatedAt);
+          cat.history.forEach(h => h.at = new Date(h.at));
+          cat.notes.forEach(n => n.at = new Date(n.at));
+          cat.volunteers.forEach(v => v.joinedAt = new Date(v.joinedAt));
+          if (cat.tnrEvent?.scheduledDate) {
+            cat.tnrEvent.scheduledDate = new Date(cat.tnrEvent.scheduledDate);
+          }
+        });
+        console.log(`[JSON DB] Loaded ${this.cats.length} cats from ${DB_FILE_PATH}`);
+      } else {
+        console.log(`[JSON DB] No db file found. Seeding initial data...`);
+        this.seed();
+      }
+      this.isLoaded = true;
+    } catch (e) {
+      console.error("[JSON DB] Error loading db file:", e);
+      this.seed();
+    }
+  }
+
+  private seed() {
+    this.cats = SEED_CATS.map((c, i) => ({
+      _id: `cat_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}`,
+      location: {
+        type: c.location?.type || 'Point',
+        coordinates: c.location?.coordinates || [DEFAULT_LNG, DEFAULT_LAT]
+      },
+      status: c.status || 'sighting',
+      count: c.count || 1,
+      nickname: c.nickname || 'Unknown Stray',
+      condition: c.condition || 'unknown',
+      photoUrl: c.photoUrl || '',
+      history: c.history || [],
+      notes: c.notes || [],
+      volunteers: c.volunteers || [],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }));
+    this.save();
+  }
+
+  private save() {
+    try {
+      fs.writeFileSync(DB_FILE_PATH, JSON.stringify(this.cats, null, 2), "utf8");
+    } catch (e) {
+      console.error("[JSON DB] Error writing db file:", e);
+    }
+  }
+
+  public async findNear(lng: number, lat: number, maxDistanceMeters: number): Promise<ICat[]> {
+    return this.cats
+      .map(cat => {
+        const [catLng, catLat] = cat.location.coordinates;
+        const dist = getDistance(lat, lng, catLat, catLng);
+        return { cat, dist };
+      })
+      .filter(item => item.dist <= maxDistanceMeters)
+      // Sort by proximity
+      .sort((a, b) => a.dist - b.dist)
+      .map(item => item.cat);
+  }
+
+  public async findAll(): Promise<ICat[]> {
+    return this.cats;
+  }
+
+  public async findById(id: string): Promise<ICat | null> {
+    const cat = this.cats.find(c => c._id === id);
+    return cat ? { ...cat } : null;
+  }
+
+  public async create(data: Partial<ICat>): Promise<ICat> {
+    const newCat: ICat = {
+      _id: `cat_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+      location: {
+        type: data.location?.type || 'Point',
+        coordinates: data.location?.coordinates || [DEFAULT_LNG, DEFAULT_LAT]
+      },
+      status: data.status || 'sighting',
+      count: data.count || 1,
+      nickname: data.nickname || 'Unknown Cat',
+      condition: data.condition || 'unknown',
+      photoUrl: data.photoUrl || '',
+      history: data.history || [],
+      notes: data.notes || [],
+      volunteers: data.volunteers || [],
+      tnrEvent: data.tnrEvent,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.cats.push(newCat);
+    this.save();
+    return newCat;
+  }
+
+  public async update(id: string, data: Partial<ICat>): Promise<ICat | null> {
+    const idx = this.cats.findIndex(c => c._id === id);
+    if (idx === -1) return null;
+
+    const current = this.cats[idx];
+    const updated: ICat = {
+      ...current,
+      ...data,
+      // Deep merge nested items if necessary, or let assignment handle it
+      history: data.history || current.history,
+      notes: data.notes || current.notes,
+      volunteers: data.volunteers || current.volunteers,
+      tnrEvent: data.tnrEvent || current.tnrEvent,
+      updatedAt: new Date()
+    };
+    this.cats[idx] = updated;
+    this.save();
+    return updated;
+  }
+}
+
+export const jsonDb = new JSONDatabase();
+
+// 3. Unified DB Handler
+let useMongoDB = false;
+
+export async function connectDB() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.log("⚠️ MONGODB_URI is not defined. Falling back to robust JSON-file database.");
+    useMongoDB = false;
+    return;
+  }
+
+  try {
+    // Add brief timeout for quick failover
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 3000
+    });
+    console.log("🚀 Connected to MongoDB Atlas successfully!");
+    useMongoDB = true;
+  } catch (error) {
+    console.error("⚠️ Failed to connect to MongoDB Atlas. Falling back to local JSON-file database.", error);
+    useMongoDB = false;
+  }
+}
+
+// Unified db operations
+export const DB = {
+  isMongo: () => useMongoDB,
+
+  findNear: async (lng: number, lat: number, maxDistanceMeters: number): Promise<ICat[]> => {
+    if (useMongoDB) {
+      try {
+        const results = await (MongooseCatModel as any).find({
+          location: {
+            $near: {
+              $geometry: { type: 'Point', coordinates: [lng, lat] },
+              $maxDistance: maxDistanceMeters
+            }
+          }
+        }).lean();
+        return results as unknown as ICat[];
+      } catch (err) {
+        console.error("MongoDB near query failed. Falling back to JSON DB.", err);
+        return jsonDb.findNear(lng, lat, maxDistanceMeters);
+      }
+    }
+    return jsonDb.findNear(lng, lat, maxDistanceMeters);
+  },
+
+  findAll: async (): Promise<ICat[]> => {
+    if (useMongoDB) {
+      try {
+        return await (MongooseCatModel as any).find({}).lean() as unknown as ICat[];
+      } catch (err) {
+        console.error("MongoDB findAll failed. Falling back.", err);
+        return jsonDb.findAll();
+      }
+    }
+    return jsonDb.findAll();
+  },
+
+  findById: async (id: string): Promise<ICat | null> => {
+    if (useMongoDB && !id.startsWith("cat_")) {
+      try {
+        return await (MongooseCatModel as any).findById(id).lean() as unknown as ICat;
+      } catch (err) {
+        console.error("MongoDB findById failed, falling back.", err);
+        return jsonDb.findById(id);
+      }
+    }
+    return jsonDb.findById(id);
+  },
+
+  create: async (data: Partial<ICat>): Promise<ICat> => {
+    if (useMongoDB) {
+      try {
+        const doc = await (MongooseCatModel as any).create(data);
+        return doc.toObject() as unknown as ICat;
+      } catch (err) {
+        console.error("MongoDB create failed, falling back.", err);
+        return jsonDb.create(data);
+      }
+    }
+    return jsonDb.create(data);
+  },
+
+  update: async (id: string, data: Partial<ICat>): Promise<ICat | null> => {
+    if (useMongoDB && !id.startsWith("cat_")) {
+      try {
+        const doc = await (MongooseCatModel as any).findByIdAndUpdate(id, data, { new: true }).lean();
+        return doc as unknown as ICat;
+      } catch (err) {
+        console.error("MongoDB update failed, falling back.", err);
+        return jsonDb.update(id, data);
+      }
+    }
+    return jsonDb.update(id, data);
+  }
+};
