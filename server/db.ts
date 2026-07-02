@@ -104,6 +104,10 @@ export const MongooseCatModel = mongoose.models.Cat || mongoose.model('Cat', cat
 // 2. JSON/In-memory Fallback Database Engine
 const DB_FILE_PATH = path.join(process.cwd(), "db.json");
 
+// Default fallback coordinates (central London) when no location is provided
+const DEFAULT_LAT = 51.505;
+const DEFAULT_LNG = -0.09;
+
 class JSONDatabase {
   private cats: ICat[] = [];
   private isLoaded = false;
